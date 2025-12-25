@@ -1,15 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Service } from "@/types/database.types";
 import { createBrowserClient } from "@supabase/ssr";
 import { ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 
+
 export default function BookingPage() {
+  const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -155,9 +159,19 @@ export default function BookingPage() {
                 <span>{totalDuration} دقيقة</span>
               </div>
             </div>
-            <button className="btn-primary w-full mt-6">
-              التالي: اختيار الموعد
-            </button>
+            <button
+  type="button"
+  disabled={selectedServices.size === 0}
+  className="btn-primary w-full mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={() => {
+    if (selectedServices.size === 0) return;
+    const ids = Array.from(selectedServices).join(",");
+    router.push(`/booking/step-2?services=${ids}`);
+  }}
+>
+  التالي: اختيار الأخصائية والموعد
+</button>
+
           </div>
         )}
 
