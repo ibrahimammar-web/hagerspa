@@ -1,3 +1,4 @@
+import { StatusButtons } from "@/components/StatusButtons";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,6 +27,11 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+interface StatusButtonsProps {
+  bookingId: string;
+  currentStatus: string;
+}
+
 export const dynamic = "force-dynamic";
 
 export default async function BookingDetailPage({ params }: PageProps) {
@@ -50,6 +56,7 @@ export default async function BookingDetailPage({ params }: PageProps) {
       specialist_id
     `
   )
+  
   .eq("id", id)
   .maybeSingle();
 
@@ -182,23 +189,26 @@ if (bookingData.specialist_id) {
           )}
 
           <div className="mt-3">
-            <div className="text-sm text-gray-500 mb-1">الحالة الحالية</div>
-            <span
-              className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${
-                booking.status === "pending_payment"
-                  ? "bg-yellow-50 text-yellow-700"
-                  : booking.status === "confirmed"
-                  ? "bg-green-50 text-green-700"
-                  : booking.status === "cancelled"
-                  ? "bg-red-50 text-red-700"
-                  : booking.status === "completed"
-                  ? "bg-blue-50 text-blue-700"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {translateStatus(booking.status)}
-            </span>
-          </div>
+  <div className="text-sm text-gray-500 mb-1">الحالة الحالية</div>
+  <span
+    className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${
+      booking.status === "pending_payment"
+        ? "bg-yellow-50 text-yellow-700"
+        : booking.status === "confirmed"
+        ? "bg-green-50 text-green-700"
+        : booking.status === "cancelled"
+        ? "bg-red-50 text-red-700"
+        : booking.status === "completed"
+        ? "bg-blue-50 text-blue-700"
+        : "bg-gray-100 text-gray-600"
+    }`}
+  >
+    {translateStatus(booking.status)}
+  </span>
+
+  <StatusButtons bookingId={booking.id} currentStatus={booking.status} />
+</div>
+
         </div>
 
         {/* Services list */}

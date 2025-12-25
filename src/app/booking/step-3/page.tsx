@@ -131,9 +131,10 @@ export default function BookingStep3Page() {
       if (!res.ok) {
         setError(data.error || "تعذر إنشاء الحجز، حاولي مرة أخرى");
       } else {
-        setSuccessMsg("تم تسجيل طلب الحجز بنجاح! سيتم تأكيده بعد الدفع.");
-        // ممكن بعد ثواني نوجه لصفحة نجاح أو عرض تفاصيل الحجز
-        // router.push(`/booking/success?id=${data.booking_id}`);
+        setSuccessMsg("تم تسجيل طلب الحجز بنجاح!");
+         if (data.booking_id) {
+    router.push(`/booking/success?id=${data.booking_id}`);
+  }
       }
     } catch (err) {
       console.error(err);
