@@ -139,7 +139,15 @@ export default async function AdminBookingsPage() {
                     <td className="px-3 py-2 whitespace-nowrap">
                       {b.start_time.slice(0, 5)} - {b.end_time.slice(0, 5)}
                     </td>
-                    <td className="px-3 py-2">{b.customer_name}</td>
+                    <td className="px-3 py-2">
+                    <Link
+                        href={`/admin/bookings/${b.id}`}
+                        className="text-[#2d2424] hover:underline"
+                    >
+                        {b.customer_name}
+                    </Link>
+                    </td>
+
                     <td className="px-3 py-2 whitespace-nowrap">
                       <a
                         href={`tel:${b.customer_phone}`}
