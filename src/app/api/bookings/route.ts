@@ -1,28 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-
-    const supabase = createServerClient(
+    // استخدام Service Role (يتجاوز RLS)
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // ignore
-            }
-          },
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
         },
       }
     );
@@ -65,7 +54,7 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    // نحسب end_time بسيطًا (بدون ثواني)
+    // حساب end_time (بدون ثواني في المدخل، نضيف :00)
     const [hourStr, minStr] = start_time.split(":");
     const startMinutes = parseInt(hourStr) * 60 + parseInt(minStr);
     const endMinutes = startMinutes + total_duration;
@@ -114,7 +103,11 @@ export async function POST(req: NextRequest) {
 
     if (bsError) {
       return NextResponse.json(
-        { error: bsError.message || "تم إنشاء الحجز لكن فشل حفظ تفاصيل الخدمات" },
+        {
+          error:
+            bsError.message ||
+            "تم إنشاء الحجز لكن فشل حفظ تفاصيل الخدمات",
+        },
         { status: 500 }
       );
     }

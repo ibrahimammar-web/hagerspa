@@ -1,5 +1,5 @@
 import { StatusButtons } from "@/components/StatusButtons";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -37,13 +37,24 @@ export const dynamic = "force-dynamic";
 export default async function BookingDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  const supabase = await createSupabaseServerClient();
+  // ✅ Service Role client لتجاوز RLS
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
 
   // 1) جلب الحجز نفسه
   const { data: bookingData, error: bookingError } = await supabase
-  .from("bookings")
-  .select(
-    `
+    .from("bookings")
+    .select(
+      `
       id,
       customer_name,
       customer_phone,
@@ -55,29 +66,25 @@ export default async function BookingDetailPage({ params }: PageProps) {
       notes,
       specialist_id
     `
-  )
-  
-  .eq("id", id)
-  .maybeSingle();
-
-
-
-  if (bookingError || !bookingData) {
-  return notFound();
-}
-
-let specialist = null;
-
-if (bookingData.specialist_id) {
-  const { data: specialistData } = await supabase
-    .from("specialists")
-    .select("id, name")
-    .eq("id", bookingData.specialist_id)
+    )
+    .eq("id", id)
     .maybeSingle();
 
-  specialist = specialistData;
-}
+  if (bookingError || !bookingData) {
+    return notFound();
+  }
 
+  let specialist = null;
+
+  if (bookingData.specialist_id) {
+    const { data: specialistData } = await supabase
+      .from("specialists")
+      .select("id, name")
+      .eq("id", bookingData.specialist_id)
+      .maybeSingle();
+
+    specialist = specialistData;
+  }
 
   // 2) جلب الخدمات داخل الحجز
   const { data: bookingServices, error: bsError } = await supabase
@@ -95,19 +102,18 @@ if (bookingData.specialist_id) {
     .order("created_at", { ascending: true });
 
   const booking: BookingDetails = {
-  id: bookingData.id,
-  customer_name: bookingData.customer_name,
-  customer_phone: bookingData.customer_phone,
-  booking_date: bookingData.booking_date,
-  start_time: bookingData.start_time,
-  end_time: bookingData.end_time,
-  total_amount: bookingData.total_amount,
-  status: bookingData.status,
-  notes: bookingData.notes,
-  specialist: specialist, // ← object أو null
-  services: (bookingServices || []) as BookingDetails["services"],
-};
-
+    id: bookingData.id,
+    customer_name: bookingData.customer_name,
+    customer_phone: bookingData.customer_phone,
+    booking_date: bookingData.booking_date,
+    start_time: bookingData.start_time,
+    end_time: bookingData.end_time,
+    total_amount: bookingData.total_amount,
+    status: bookingData.status,
+    notes: bookingData.notes,
+    specialist: specialist,
+    services: (bookingServices || []) as BookingDetails["services"],
+  };
 
   const totalDuration = booking.services.reduce(
     (sum, s) => sum + s.duration_min,
@@ -189,26 +195,25 @@ if (bookingData.specialist_id) {
           )}
 
           <div className="mt-3">
-  <div className="text-sm text-gray-500 mb-1">الحالة الحالية</div>
-  <span
-    className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${
-      booking.status === "pending_payment"
-        ? "bg-yellow-50 text-yellow-700"
-        : booking.status === "confirmed"
-        ? "bg-green-50 text-green-700"
-        : booking.status === "cancelled"
-        ? "bg-red-50 text-red-700"
-        : booking.status === "completed"
-        ? "bg-blue-50 text-blue-700"
-        : "bg-gray-100 text-gray-600"
-    }`}
-  >
-    {translateStatus(booking.status)}
-  </span>
+            <div className="text-sm text-gray-500 mb-1">الحالة الحالية</div>
+            <span
+              className={`inline-flex items-center px-3 py-1 rounded-full text-xs ${
+                booking.status === "pending_payment"
+                  ? "bg-yellow-50 text-yellow-700"
+                  : booking.status === "confirmed"
+                  ? "bg-green-50 text-green-700"
+                  : booking.status === "cancelled"
+                  ? "bg-red-50 text-red-700"
+                  : booking.status === "completed"
+                  ? "bg-blue-50 text-blue-700"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {translateStatus(booking.status)}
+            </span>
 
-  <StatusButtons bookingId={booking.id} currentStatus={booking.status} />
-</div>
-
+            <StatusButtons bookingId={booking.id} currentStatus={booking.status} />
+          </div>
         </div>
 
         {/* Services list */}

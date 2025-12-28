@@ -14,16 +14,11 @@ export const metadata: Metadata = {
   keywords: "سبا, مساج, عناية بشرة, مناكير, حمام مغربي, الرياض",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// src/app/layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className={tajawal.className}>
-        {children}
-      </body>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <body className={tajawal.className}>{children}</body>
     </html>
   );
 }
