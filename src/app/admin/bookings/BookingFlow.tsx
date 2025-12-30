@@ -47,11 +47,11 @@ export default function BookingFlow({ services }: { services: Service[] }) {
   }
 
   // جلب الـ Slots المتاحة
-  async function loadSlots(specialistId: string, date: string) {
+  async function loadSlots(specialistId: string, date: string, serviceId: string) {
     setLoading(true);
     try {
       const res = await fetch(
-        `/api/booking/slots?specialist_id=${specialistId}&date=${date}`
+        `/api/booking/slots?specialist_id=${specialistId}&date=${date}&service_id=${serviceId}`
       );
       const data = await res.json();
       setAvailableSlots(data.slots || []);
@@ -84,7 +84,7 @@ export default function BookingFlow({ services }: { services: Service[] }) {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "تعذر إنشاء الحجز");
+        router.push(`/booking/success/${data.booking_id}`);
       } else {
         alert("تم الحجز بنجاح!");
         router.push("/");
@@ -204,9 +204,10 @@ export default function BookingFlow({ services }: { services: Service[] }) {
                 type="date"
                 value={selectedDate}
                 onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  if (selectedSpecialistId && e.target.value) {
-                    loadSlots(selectedSpecialistId, e.target.value);
+                  const value = e.target.value;
+                  setSelectedDate(value);
+                  if (selectedSpecialistId && value && selectedServiceId) {
+                    loadSlots(selectedSpecialistId, value, selectedServiceId);
                   }
                 }}
                 className="w-full border rounded px-3 py-2"
